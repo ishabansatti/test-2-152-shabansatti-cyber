@@ -1,0 +1,56 @@
+name: Autograding Tests
+on:
+  - push
+  - workflow_dispatch
+  - repository_dispatch
+
+permissions:
+  checks: write
+  actions: read
+  contents: read
+
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      # 1. Checkout repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Install dependencies
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ cmake libgtest-dev make
+          # Build Google Test from source
+          cd /usr/src/gtest
+          sudo cmake CMakeLists.txt
+          sudo make
+          sudo cp *.a /usr/lib
+          cd $GITHUB_WORKSPACE
+
+      # 3. Build test binary
+      - name: Build tests
+        run: make all
+
+      # 4a. Run PositiveNumbers test (5 points)
+      - name: Run PositiveNumbers Test
+        id: positive_numbers
+        run: ./bin/test_student_code --gtest_filter=SumUpToTest.PositiveNumbers
+
+      # 4b. Run EdgeCases test (10 points)
+      - name: Run EdgeCases Test
+        id: edge_cases
+        run: ./bin/test_student_code --gtest_filter=SumUpToTest.EdgeCases
+
+      # 5. Autograding Reporter
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        with:
+          runners: |
+            positive_numbers
+            edge_cases
+        env:
+          POSITIVE_NUMBERS_RESULTS: ${{ steps.positive_numbers.outputs.result }}
+          EDGE_CASES_RESULTS: ${{ steps.edge_cases.outputs.result }}
