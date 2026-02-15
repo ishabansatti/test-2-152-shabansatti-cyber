@@ -19,7 +19,7 @@ jobs:
       with:
         test-name: SumUpToTest.PositiveNumbers
         setup-command: ''
-        command: "./bin/test_student_code --gtest_filter=SumUpToTest.PositiveNumbers"
+        command: cd build && ./CPP_AUTOGRADED --gtest_filter=SumUpToTest.PositiveNumbers
         timeout: 10
         max-score: 10
     - name: Autograding Reporter
